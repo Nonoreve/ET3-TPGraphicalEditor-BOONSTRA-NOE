@@ -4,29 +4,42 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.paint.*?>
+<?import javafx.scene.text.*?>
 
 <BorderPane fx:id="borderP" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
    <left>
-      <FlowPane fx:id="flowP" prefHeight="400.0" prefWidth="151.0" BorderPane.alignment="CENTER">
+      <VBox fx:id="menu" alignment="TOP_CENTER" prefHeight="400.0" prefWidth="151.0" spacing="15" BorderPane.alignment="CENTER">
          <children>
-            <Label fx:id="optionsL" prefHeight="73.0" prefWidth="103.0" text="Options" />
-            <RadioButton fx:id="selectRB" mnemonicParsing="false" prefHeight="31.0" prefWidth="112.0" selected="true" text="Select / Move">
-               <toggleGroup>
-                  <ToggleGroup fx:id="CommandG" />
-               </toggleGroup></RadioButton>
-            <RadioButton fx:id="ellipseRB" mnemonicParsing="false" prefHeight="29.0" prefWidth="110.0" text="Ellipse" toggleGroup="$CommandG" />
-            <RadioButton fx:id="rectangleRB" mnemonicParsing="false" prefHeight="31.0" prefWidth="112.0" text="Rectangle" toggleGroup="$CommandG" />
-            <RadioButton fx:id="lineRB" mnemonicParsing="false" prefHeight="31.0" prefWidth="106.0" text="Line" toggleGroup="$CommandG" />
-            <ColorPicker fx:id="colorP">
+            <Label fx:id="optionsL" prefHeight="73.0" prefWidth="152.0" text="       Options" textAlignment="CENTER">
+               <font>
+                  <Font size="16.0" />
+               </font></Label>
+            <VBox spacing="15">
+               <children>
+                  <RadioButton fx:id="selectRB" mnemonicParsing="false" selected="true" text="Select / Move">
+                     <toggleGroup>
+                        <ToggleGroup fx:id="CommandG" />
+                     </toggleGroup>
+                  </RadioButton>
+                  <RadioButton fx:id="ellipseRB" mnemonicParsing="false" text="Ellipse" toggleGroup="$CommandG" />
+                  <RadioButton fx:id="rectangleRB" mnemonicParsing="false" text="Rectangle" toggleGroup="$CommandG" />
+                  <RadioButton fx:id="lineRB" mnemonicParsing="false" text="Line" toggleGroup="$CommandG" />
+               </children>
+            </VBox>
+            <ColorPicker fx:id="colorP" prefHeight="50.0" prefWidth="120.0">
                <value>
                   <Color red="0.7236841917037964" green="0.13066519796848297" blue="0.13066519796848297" />
                </value></ColorPicker>
-            <Button fx:id="deleteB" mnemonicParsing="false" prefHeight="26.0" prefWidth="96.0" text="Delete" />
-            <Button fx:id="cloneB" mnemonicParsing="false" prefHeight="26.0" prefWidth="97.0" text="Clone" />
+            <Button fx:id="deleteB" mnemonicParsing="false" prefHeight="26.0" prefWidth="120.0" style="-fx-padding: 5;" text="Delete" />
+            <Button fx:id="cloneB" mnemonicParsing="false" prefHeight="26.0" prefWidth="120.0" text="Clone" />
          </children>
-      </FlowPane>
+      </VBox>
    </left>
    <center>
-      <Canvas fx:id="canvas" height="480" width="449" BorderPane.alignment="CENTER" />
+      <Pane BorderPane.alignment="CENTER">
+         <children>
+            <Canvas fx:id="canvas" height="800.0" width="600.0" />
+         </children>
+      </Pane>
    </center>
 </BorderPane>

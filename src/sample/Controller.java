@@ -40,16 +40,18 @@ public class Controller implements EventHandler<MouseEvent> {
     private Canvas canvas;
 
     private List<Shape> shapes;
+    private Shape iconShape;
     private Shape drawingShape;
     private Shape selectedShape;
-    private Dimension2D offset;
+    private Dimension2D origin;
 
     @FXML
     public void initialize() {
         shapes = new ArrayList<Shape>();
-        drawingShape = null;
+        iconShape = null;
         selectedShape = null;
         GraphicsContext gc = canvas.getGraphicsContext2D();
+        canvas.setHeight(600);
         gc.setFill(Color.WHITE);
         gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
 
@@ -57,26 +59,27 @@ public class Controller implements EventHandler<MouseEvent> {
         canvas.addEventHandler(MouseEvent.MOUSE_RELEASED, this);
         canvas.addEventHandler(MouseEvent.MOUSE_MOVED, this);
         canvas.addEventHandler(MouseEvent.MOUSE_PRESSED, this);
+        canvas.addEventHandler(MouseEvent.MOUSE_ENTERED, this);
 
         selectRB.selectedProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue) drawingShape = null;
+            if (newValue) iconShape = null;
         });
         ellipseRB.selectedProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue) {
-                drawingShape = new Ellipse();
-                offset = null;
+                iconShape = new Ellipse(colorP.getValue());
+                origin = null;
             }
         });
         rectangleRB.selectedProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue) {
-                drawingShape = new Rectangle();
-                offset = null;
+                iconShape = new Rectangle(colorP.getValue());
+                origin = null;
             }
         });
         lineRB.selectedProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue) {
-                drawingShape = new Line();
-                offset = null;
+                iconShape = new Line(colorP.getValue());
+                origin = null;
             }
         });
     }
@@ -86,7 +89,6 @@ public class Controller implements EventHandler<MouseEvent> {
         gc.setFill(Color.WHITE);
         gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
         gc.setLineWidth(5);
-        gc.setFill(colorP.getValue());
         for (Shape shape : shapes) {
             shape.draw(gc);
         }
@@ -98,24 +100,36 @@ public class Controller implements EventHandler<MouseEvent> {
         GraphicsContext gc = canvas.getGraphicsContext2D();
         paintComponents(gc);
         // drawing mode
-        if (drawingShape != null) {
-            drawingShape.position = new Dimension2D(mx + 10, my + 10);
-            drawingShape.draw(gc);
-            // summoning new shape the same type as drawingShape
+        if (iconShape != null) {
+            iconShape.position = new Dimension2D(mx + 10, my + 10);
+            iconShape.draw(gc);
+            // freezing the drawn shape
             if (event.getEventType().equals(MouseEvent.MOUSE_RELEASED)) {
                 System.out.println("press " + mx + ' ' + my);
-                shapes.add(drawingShape.summon(mx, my));
+                shapes.add(drawingShape);
+            }
+            // summoning new shape the same type as drawingShape
+            if (event.getEventType().equals(MouseEvent.MOUSE_PRESSED)) {
+                System.out.println("press " + mx + ' ' + my);
+                drawingShape = iconShape.summon(mx, my);
+                origin = new Dimension2D(mx, my);
+            }
+            // resizing the drawn shape
+            if (event.getEventType().equals(MouseEvent.MOUSE_DRAGGED)) {
+                System.out.println("drag " + mx + ' ' + my);
+                drawingShape.size = new Dimension2D((mx - origin.getWidth()), (my - origin.getHeight()));
+                drawingShape.draw(gc);
+            }
+            // reset color
+            if (event.getEventType().equals(MouseEvent.MOUSE_ENTERED)) {
+                System.out.println("enter " + mx + ' ' + my);
+                iconShape.color = colorP.getValue();
             }
         } else { // selection mode
             if (selectedShape != null) {
-                if (event.getEventType().equals(MouseEvent.MOUSE_PRESSED)) {
-                    System.out.println("press " + mx + ' ' + my);
-                    if (offset == null)
-                        offset = new Dimension2D(mx, my);
-                }
                 if (event.getEventType().equals(MouseEvent.MOUSE_DRAGGED)) {
                     System.out.println("drag " + mx + ' ' + my);
-                    selectedShape.size = new Dimension2D(selectedShape.size.getWidth() + (mx - offset.getWidth()), selectedShape.size.getHeight() + (my - offset.getHeight()));
+                    selectedShape.position = new Dimension2D(mx, my);
                 }
             }
             if (event.getEventType().equals(MouseEvent.MOUSE_PRESSED)) {
@@ -137,16 +151,19 @@ public class Controller implements EventHandler<MouseEvent> {
     abstract class Shape { // created my own because the javafx version don't match my needs
         Dimension2D size;
         Dimension2D position;
+        Color color;
         boolean selected = false;
 
-        Shape() { // for the drawing shape
+        Shape(Color color) { // for the drawing shape
             position = null;
+            this.color = color;
             size = new Dimension2D(20, 20);
         }
 
-        Shape(double posX, double posY) { // for summoning
+        Shape(Color color, double posX, double posY) { // for summoning
             position = new Dimension2D(posX, posY);
-            size = new Dimension2D(50, 50);
+            this.color = color;
+            size = new Dimension2D(1, 1);
         }
 
         abstract public void draw(GraphicsContext gc);
@@ -156,15 +173,16 @@ public class Controller implements EventHandler<MouseEvent> {
 
     class Line extends Shape {
 
-        public Line() {
-            super();
+        public Line(Color color) {
+            super(color);
         }
 
-        public Line(double posX, double posY) {
-            super(posX, posY);
+        public Line(Color color, double posX, double posY) {
+            super(color, posX, posY);
         }
 
         public void draw(GraphicsContext gc) {
+            gc.setFill(color);
             gc.setLineWidth(5);
             if (selected)
                 gc.fillOval(position.getWidth(), position.getHeight(), 10, 10);
@@ -173,22 +191,23 @@ public class Controller implements EventHandler<MouseEvent> {
 
         @Override
         public Shape summon(double posX, double posY) {
-            return new Line(posX, posY);
+            return new Line(color, posX, posY);
         }
 
     }
 
     class Ellipse extends Shape {
 
-        public Ellipse() {
-            super();
+        public Ellipse(Color color) {
+            super(color);
         }
 
-        public Ellipse(double posX, double posY) {
-            super(posX, posY);
+        public Ellipse(Color color, double posX, double posY) {
+            super(color, posX, posY);
         }
 
         public void draw(GraphicsContext gc) {
+            gc.setFill(color);
             if (selected)
                 gc.strokeOval(position.getWidth(), position.getHeight(), size.getWidth(), size.getHeight());
             gc.fillOval(position.getWidth(), position.getHeight(), size.getWidth(), size.getHeight());
@@ -196,21 +215,22 @@ public class Controller implements EventHandler<MouseEvent> {
 
         @Override
         public Shape summon(double posX, double posY) {
-            return new Ellipse(posX, posY);
+            return new Ellipse(color, posX, posY);
         }
     }
 
     class Rectangle extends Shape {
 
-        public Rectangle() {
-            super();
+        public Rectangle(Color color) {
+            super(color);
         }
 
-        public Rectangle(double posX, double posY) {
-            super(posX, posY);
+        public Rectangle(Color color, double posX, double posY) {
+            super(color, posX, posY);
         }
 
         public void draw(GraphicsContext gc) {
+            gc.setFill(color);
             if (selected)
                 gc.strokeRect(position.getWidth(), position.getHeight(), size.getWidth(), size.getHeight());
             gc.fillRect(position.getWidth(), position.getHeight(), size.getWidth(), size.getHeight());
@@ -218,7 +238,7 @@ public class Controller implements EventHandler<MouseEvent> {
 
         @Override
         public Shape summon(double posX, double posY) {
-            return new Rectangle(posX, posY);
+            return new Rectangle(color, posX, posY);
         }
     }
 }
